@@ -28,14 +28,12 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
     
     // MARK: - Initialization
     init() {
-        // Asignamos este ViewModel como delegado del DataManager
         dataManager.delegate = self
         print("🎯 ContentViewModel inicializado como delegado")
     }
     
     // MARK: - Task Management
     
-    /// Agrega una nueva tarea
     func addTask() {
         guard !newTaskTitle.isEmpty else { return }
         
@@ -46,30 +44,25 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
         )
         tasks.append(task)
         
-        // Limpiar campos
         newTaskTitle = ""
         newTaskPriority = 1
         
         print("✅ Tarea agregada: \(task)")
     }
     
-    /// Marca una tarea como completada/incompleta
     func toggleTask(at index: Int) {
         guard tasks.indices.contains(index) else { return }
         tasks[index].completed.toggle()
     }
     
-    /// Elimina tareas en los índices especificados
     func deleteTasks(at offsets: IndexSet) {
         tasks.remove(atOffsets: offsets)
     }
     
-    /// Retorna tareas ordenadas por prioridad (demostración de Comparable)
     var sortedTasks: [Task] {
         tasks.sorted { $0.priority > $1.priority }
     }
     
-    /// Verifica si existe una tarea con cierto título (demostración de Equatable)
     func containsTask(withTitle title: String) -> Bool {
         let searchTask = Task(title: title, priority: 0, completed: false)
         return tasks.contains { $0.title == searchTask.title }
@@ -77,7 +70,6 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
     
     // MARK: - Remote Data
     
-    /// Inicia la descarga de datos remotos
     func fetchRemoteData() {
         isLoading = true
         errorMessage = nil
@@ -86,7 +78,6 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
     
     // MARK: - DataManagerDelegate
     
-    /// Se ejecuta cuando el DataManager recibe datos exitosamente
     func dataManager(_ manager: DataManager, didReceiveData data: [String]) {
         DispatchQueue.main.async {
             self.receivedData = data
@@ -98,7 +89,6 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
         }
     }
     
-    /// Se ejecuta cuando el DataManager encuentra un error
     func dataManager(_ manager: DataManager, didFailWithError error: Error) {
         DispatchQueue.main.async {
             self.errorMessage = error.localizedDescription
@@ -111,32 +101,21 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
 }
 
 // MARK: - ContentView
-/// Vista principal que demuestra todos los conceptos del Tema 10
 struct ContentView: View {
     
-    // MARK: - Environment
     @EnvironmentObject var dataStore: DataStore
-    
-    // MARK: - State
     @StateObject private var viewModel = ContentViewModel()
-    @State private var showingDelegationView = false
-    @State private var showingProtocolExtensions = false
-    @State private var showingTimerView = false
     
-    // MARK: - Body
     var body: some View {
         NavigationView {
             List {
-                // Sección de navegación a ejemplos
                 Section(header: Text("📚 Ejemplos de Protocolos")) {
                     NavigationLink("🔄 Delegación Demo", destination: DelegationExampleView())
                     NavigationLink("🧩 Extensiones de Protocolos", destination: ProtocolExtensionsExampleView())
                     NavigationLink("⏱️ Timer & ScenePhase", destination: TimerView())
                 }
                 
-                // Sección de gestión de tareas
                 Section(header: Text("✅ Gestión de Tareas")) {
-                    // Campo para nueva tarea
                     HStack {
                         TextField("Título de tarea", text: $viewModel.newTaskTitle)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -154,7 +133,6 @@ struct ContentView: View {
                         .disabled(viewModel.newTaskTitle.isEmpty)
                     }
                     
-                    // Lista de tareas ordenadas por prioridad (Comparable)
                     ForEach(Array(viewModel.sortedTasks.enumerated()), id: \.element.id) { index, task in
                         HStack {
                             Button(action: {
@@ -170,7 +148,6 @@ struct ContentView: View {
                                 Text(task.title)
                                     .strikethrough(task.completed)
                                 
-                                // Demostración de CustomStringConvertible
                                 Text(task.description)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -178,7 +155,6 @@ struct ContentView: View {
                         }
                     }
                     .onDelete { offsets in
-                        // Mapear índices de sortedTasks a tasks originales
                         let tasksToDelete = offsets.map { viewModel.sortedTasks[$0] }
                         let originalIndices = IndexSet(tasksToDelete.compactMap { task in
                             viewModel.tasks.firstIndex(where: { $0.id == task.id })
@@ -187,7 +163,6 @@ struct ContentView: View {
                     }
                 }
                 
-                // Sección de delegación (DataManager)
                 Section(header: Text("📡 Delegación - DataManager")) {
                     Button(action: {
                         viewModel.fetchRemoteData()
@@ -213,7 +188,6 @@ struct ContentView: View {
                     }
                 }
                 
-                // Sección de información
                 Section(header: Text("ℹ️ Conceptos Demostrados")) {
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Protocols (Vehicle, DataManagerDelegate)", systemImage: "text.book.closed")
@@ -235,7 +209,6 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     ContentView()
         .environmentObject(DataStore())
