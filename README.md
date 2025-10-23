@@ -1,252 +1,214 @@
-.# Tema 10 Swift - Proyecto Demostración
+# Tema 10: Protocolos en Swift
 
-## 📚 Descripción
+Bienvenidos al proyecto de ejemplo del Tema 10. Este proyecto demuestra los conceptos fundamentales de protocolos en Swift a través de ejemplos prácticos y sencillos.
 
-Este proyecto demuestra todos los conceptos fundamentales del **Tema 10: Protocolos, Delegación y Gestión del Ciclo de Vida** en Swift y SwiftUI.
+## 📚 Conceptos Cubiertos
 
-### Conceptos Implementados
+Este proyecto cubre los siguientes temas:
 
-- ✅ **Protocolos** (Vehicle, DataManagerDelegate)
-- ✅ **Delegación** (patrón Delegate con weak reference)
-- ✅ **Equatable** (comparación de igualdad en Coordinate, Student)
-- ✅ **Comparable** (ordenamiento de Student por calificación)
-- ✅ **CustomStringConvertible** (descripción personalizada de Task)
-- ✅ **Extensiones de Protocolo** (Identifiable con funcionalidad por defecto)
-- ✅ **Gestión del Ciclo de Vida** (ScenePhase para persistencia automática)
-- ✅ **Persistencia** (JSON en UserDefaults)
-- ✅ **MVVM Architecture** (ViewModels con @ObservableObject)
+1. **Protocolos básicos** - Definición e implementación
+2. **Equatable** - Comparación de igualdad entre objetos
+3. **Comparable** - Ordenamiento de objetos
+4. **CustomStringConvertible** - Descripciones personalizadas
+5. **Delegación** - Patrón de diseño para comunicación entre objetos
 
----
+## 🗂️ Estructura del Proyecto
 
-## 🗂️ Estructura de Archivos
+```
+Tema10Swift/
+├── Tema10SwiftApp.swift      # Punto de entrada de la app
+├── ContentView.swift          # Vista principal con todos los ejemplos
+├── Models.swift               # Coordinate, Student y Task
+├── Protocols.swift            # Vehicle y DataManagerDelegate
+└── DataManager.swift          # Ejemplo de delegación
+```
 
-### Archivos Principales
+## 🎯 Cómo Usar Este Proyecto
 
-1. **Tema10SwiftApp.swift** - Punto de entrada de la app
-   - Gestión de ScenePhase (.active, .inactive, .background)
-   - Persistencia automática cuando la app pasa a segundo plano
-   - DataStore compartido vía @EnvironmentObject
+### 1. Ejecutar la App
 
-2. **Models.swift** - Modelos de datos
-   - `Coordinate`: Demuestra **Equatable**
-   - `Student`: Demuestra **Comparable** y **Equatable**
-   - `Task`: Demuestra **CustomStringConvertible**
-   - Ejemplos de uso de `contains()` y `sorted()`
-
-3. **Protocols.swift** - Definiciones de protocolos
-   - `Vehicle`: Protocolo con propiedades y métodos mutating
-   - `Car` y `Motorcycle`: Implementaciones de Vehicle
-   - `DataManagerDelegate`: Protocolo de delegación
-   - Extensiones de `Identifiable` con funcionalidad por defecto
-
-4. **DataManager.swift** - Gestor de datos remotos
-   - Simula peticiones de red asíncronas
-   - Usa delegación para notificar resultados
-   - **weak var delegate** para evitar retain cycles
-
-5. **DataStore.swift** - Almacenamiento de tareas
-   - @Published para notificar cambios a las vistas
-   - Persistencia con JSON en UserDefaults
-   - `saveData()` y `loadData()` automáticos
-
-6. **ContentView.swift** - Vista principal
-   - Lista de tareas con CRUD completo
-   - Integración con DataManager vía delegación
-   - Tabs para diferentes demos
-   - ContentViewModel como DataManagerDelegate
-
-7. **TimerView.swift** y **TimerModel.swift** - Demo de Timer
-   - Gestión del ciclo de vida con ScenePhase
-   - Pausa automática en background
-   - Persistencia del estado del timer
-
-8. **DelegationExampleView.swift** - Demo de delegación
-   - Muestra el patrón de delegación completo
-   - ViewModel actúa como delegado
-   - Manejo de éxito y error
-
-9. **ProtocolExtensionsExample.swift** - Demo de extensiones
-   - Uso de extensiones de Identifiable
-   - Demostración de Vehicle protocol
-   - Interacción con Car y Motorcycle
-
----
-
-## 🚀 Cómo Ejecutar
-
-### Requisitos
-- Xcode 15+ 
-- iOS 17+ (simulador o dispositivo)
-- Swift 5.9+
-
-### Pasos
 1. Abre `Tema10Swift.xcodeproj` en Xcode
-2. Selecciona un simulador (ej: iPhone 15)
+2. Selecciona un simulador de iPhone
 3. Presiona `Cmd + R` para ejecutar
-4. ¡Explora los 5 tabs de la aplicación!
 
----
+### 2. Explorar los Ejemplos
 
-## 🧪 Cómo Probar Manualmente
+La app muestra cuatro secciones principales:
 
-### 1. Protocolos y Equatable/Comparable
-- Ve al tab **"Estudiantes"** 👨‍🎓
-- Observa cómo los estudiantes están ordenados por calificación (Comparable)
-- El array usa `.sorted()` gracias a la implementación del operador `<`
+#### ⚖️ Equatable & Comparable
+- Muestra una lista de tareas ordenadas automáticamente por prioridad
+- **Concepto**: `Comparable` permite usar `sorted()` y operadores `<`, `>`
+- **Archivo**: `Models.swift` - revisa la implementación de `Task`
 
-### 2. CustomStringConvertible
-- Ve al tab **"Tareas"** 📝
-- Observa la descripción de cada tarea (emoji + prioridad + título)
-- Esto viene del método `description` del protocolo CustomStringConvertible
+#### 🔄 Delegación
+- Presiona "Obtener Datos Remotos" para ver el patrón de delegación en acción
+- **Concepto**: `DataManager` notifica eventos al `ViewModel` a través del protocolo `DataManagerDelegate`
+- **Archivos**: `DataManager.swift` y `Protocols.swift`
 
-### 3. Delegación (DataManagerDelegate)
-- En el tab **"Tareas"**, presiona el botón **"📡 Obtener Datos Remotos"**
-- Espera 2 segundos (simulación de red)
-- Verás una alerta con los datos recibidos (80% éxito) o error (20%)
-- Revisa la consola de Xcode para ver los logs de delegación
-- **También** ve al tab **"Delegación"** para ver una demo dedicada
+#### 🚗 Protocolo Vehicle
+- Muestra un ejemplo interactivo de cómo implementar un protocolo
+- Presiona el botón para cambiar el color del coche
+- **Concepto**: Protocolos definen "contratos" que las estructuras/clases deben cumplir
+- **Archivo**: `Protocols.swift` - revisa `Vehicle` y `Car`
 
-### 4. ScenePhase y Persistencia
-**Prueba más importante del proyecto:**
+#### 📚 Conceptos Demostrados
+- Resumen visual de todos los conceptos implementados en el proyecto
 
-a) **En el Simulador:**
-   1. Agrega varias tareas en el tab "Tareas"
-   2. Presiona `Cmd + Shift + H` (botón Home)
-   3. Revisa la consola de Xcode → verás los mensajes de ScenePhase
-   4. Termina la app desde el selector de apps (swipe up)
-   5. Reabre la app → ¡Las tareas siguen ahí! ✅
+## 📖 Guía de Estudio
 
-b) **En el tab Timer:**
-   1. Ve al tab **"Timer"** ⏱️
-   2. Inicia el timer
-   3. Presiona Home (`Cmd + Shift + H`)
-   4. Observa en consola: "App en BACKGROUND - Guardando estado"
-   5. Reabre la app → El timer mantiene el contador
+### Paso 1: Entender los Protocolos Básicos
 
-### 5. Extensiones de Protocolo
-- Ve al tab **"Protocolos"** 🔧
-- Observa cómo `User` y `Person` usan `displayID()` e `isValidID()`
-- Estos métodos vienen de la extensión de Identifiable
-- Interactúa con los botones de Car y Motorcycle
+Abre `Protocols.swift` y estudia:
 
----
-
-## 📖 Mapeo Concepto → Archivo
-
-| Concepto | Archivo(s) | Ubicación |
-|----------|-----------|-----------|
-| **Equatable** | Models.swift | Coordinate, Student |
-| **Comparable** | Models.swift | Student (operador <) |
-| **CustomStringConvertible** | Models.swift | Task.description |
-| **Protocolos** | Protocols.swift | Vehicle, DataManagerDelegate |
-| **Delegación** | DataManager.swift + ContentView.swift | weak var delegate |
-| **Extensiones de Protocolo** | Protocols.swift | extension Identifiable |
-| **ScenePhase** | Tema10SwiftApp.swift + TimerView.swift | .onChange(of: scenePhase) |
-| **Persistencia** | DataStore.swift + TimerModel.swift | saveData() / loadData() |
-
----
-
-## 🎯 Puntos Clave para la Presentación
-
-### 1. Equatable
 ```swift
-// Permite comparar instancias por igualdad
+protocol Vehicle {
+    var numberOfWheels: Int { get }      // Solo lectura
+    var color: String { get set }        // Lectura y escritura
+    
+    func startEngine()
+    mutating func changeColor(to newColor: String)
+}
+```
+
+**Pregunta clave**: ¿Por qué `changeColor` necesita ser `mutating`?
+
+### Paso 2: Equatable y Comparable
+
+Abre `Models.swift` y estudia la estructura `Task`:
+
+- **Equatable**: Permite comparar con `==`
+- **Comparable**: Permite ordenar con `<`, `>`, `sorted()`
+- **CustomStringConvertible**: Proporciona `description` personalizada
+
+**Ejercicio**: Intenta agregar un nuevo tipo de prioridad a las tareas.
+
+### Paso 3: Delegación
+
+Sigue el flujo de delegación:
+
+1. `ContentView.swift` → El `ContentViewModel` se registra como delegado
+2. `ContentViewModel` → Implementa `DataManagerDelegate`
+3. Usuario presiona botón → Llama a `dataManager.fetchData()`
+4. `DataManager.swift` → Simula red y notifica al delegado
+5. `ContentViewModel` → Recibe notificación y actualiza UI
+
+**Pregunta clave**: ¿Por qué el delegate se declara como `weak`?
+
+## 🔍 Detalles de Implementación
+
+### Equatable
+
+```swift
+struct Coordinate: Equatable {
+    let latitude: Double
+    let longitude: Double
+}
+
+// Ahora puedes comparar:
 let coord1 = Coordinate(latitude: 40.7, longitude: -74.0)
 let coord2 = Coordinate(latitude: 40.7, longitude: -74.0)
-coord1 == coord2 // true
-
-// También permite usar contains()
-coordinates.contains(searchCoordinate)
+let areEqual = coord1 == coord2  // true
 ```
 
-### 2. Comparable
-```swift
-// Permite ordenar automáticamente con sorted()
-let sortedStudents = students.sorted() // Ordenados por calificación
-let topStudent = sortedStudents.first  // Mejor estudiante
-```
+### Comparable
 
-### 3. CustomStringConvertible
 ```swift
-let task = Task(title: "Estudiar", priority: 1)
-print(task) // ⬜️ [🔴 Alta] Estudiar
-// En lugar de: Task(id: UUID(...), title: "Estudiar", ...)
-```
-
-### 4. Delegación
-```swift
-// ❌ Problema: Retain cycle
-class ViewController {
-    let manager = DataManager()
-    init() { manager.delegate = self } // ViewController retiene manager
+struct Student: Comparable {
+    let name: String
+    let grade: Double
+    
+    static func < (lhs: Student, rhs: Student) -> Bool {
+        return lhs.grade > rhs.grade  // Mejor calificación primero
+    }
 }
 
-// ✅ Solución: weak delegate
-protocol DataManagerDelegate: AnyObject { ... }
+// Ahora puedes ordenar:
+let sorted = students.sorted()  // Ordenados por calificación
+```
+
+### Delegación
+
+```swift
+// 1. Definir el protocolo
+protocol DataManagerDelegate: AnyObject {
+    func dataManager(_ manager: DataManager, didReceiveData data: [String])
+}
+
+// 2. En el delegador (DataManager)
 class DataManager {
-    weak var delegate: DataManagerDelegate? // No retiene al delegate
+    weak var delegate: DataManagerDelegate?
+    
+    func fetchData() {
+        // ... obtener datos ...
+        delegate?.dataManager(self, didReceiveData: data)
+    }
 }
-```
 
-### 5. ScenePhase
-```swift
-.onChange(of: scenePhase) { old, new in
-    switch new {
-    case .active:    // App en primer plano
-    case .inactive:  // Transitorio
-    case .background: // ¡GUARDAR DATOS AHORA!
-        dataStore.saveData()
+// 3. En el delegado (ViewModel)
+class ContentViewModel: DataManagerDelegate {
+    func dataManager(_ manager: DataManager, didReceiveData data: [String]) {
+        // Procesar datos recibidos
     }
 }
 ```
 
----
+## 💡 Conceptos Importantes
 
-## 🐛 Debugging Tips
+### ¿Por qué usar `weak` en el delegate?
 
-### Ver logs de ScenePhase
-1. Ejecuta la app en Xcode
-2. Abre la consola (View → Debug Area → Show Debug Area)
-3. Presiona Home → Verás logs detallados del ciclo de vida
-
-### Verificar persistencia
-```bash
-# Ver UserDefaults en simulador
-defaults read com.yourname.Tema10Swift
+```swift
+weak var delegate: DataManagerDelegate?
 ```
 
-### Simular memory warning
-En el simulador: **Debug → Simulate Memory Warning**
+- Evita **retain cycles** (ciclos de retención)
+- Si el delegado se destruye, la referencia automáticamente se vuelve `nil`
+- Es una buena práctica en el patrón de delegación
+
+### ¿Cuándo usar cada protocolo?
+
+- **Equatable**: Cuando necesitas comparar si dos objetos son iguales
+- **Comparable**: Cuando necesitas ordenar objetos
+- **CustomStringConvertible**: Cuando quieres una representación textual personalizada
+- **Protocolo personalizado**: Para definir contratos específicos de tu app
+
+## 🎓 Ejercicios Propuestos
+
+1. **Fácil**: Agrega una nueva propiedad `dueDate` al struct `Task` y ordena por fecha
+2. **Medio**: Crea un nuevo protocolo `Printable` con un método `printDetails()`
+3. **Avanzado**: Implementa un segundo delegado para `DataManager` que maneje eventos de progreso
+
+## ⚠️ Errores Comunes
+
+1. **Olvidar `mutating`**: Los métodos que modifican structs necesitan `mutating`
+2. **No usar `weak`**: El delegate debe ser `weak` para evitar retain cycles
+3. **Confundir `==` con `===`**: `==` compara valores (Equatable), `===` compara referencias
+4. **No implementar todos los métodos**: Un protocolo es un contrato completo
+
+## 📝 Notas Adicionales
+
+- Todos los comentarios en el código están en español para facilitar el aprendizaje
+- Los print statements ayudan a seguir el flujo de delegación
+- Cada struct/class tiene comentarios explicando qué protocolo demuestra
+
+## 🤝 Preguntas Frecuentes
+
+**P: ¿Por qué Task es tanto Comparable como CustomStringConvertible?**  
+R: Para demostrar que un tipo puede conformar múltiples protocolos simultáneamente.
+
+**P: ¿Cuál es la diferencia entre `{ get }` y `{ get set }`?**  
+R: `{ get }` es solo lectura, `{ get set }` permite lectura y escritura.
+
+**P: ¿Por qué DataManagerDelegate hereda de AnyObject?**  
+R: Para que solo las clases (no structs) puedan ser delegados, permitiendo usar `weak`.
+
+## 📚 Recursos Adicionales
+
+- [Documentación oficial de Swift - Protocols](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html)
+- [Apple Developer - Delegation](https://developer.apple.com/documentation/swift/cocoa_design_patterns)
 
 ---
 
-## 📝 TODOs para Mejoras Futuras
+**Desarrollado para el curso de Desarrollo de Aplicaciones iOS**  
+*Universidad Tecmilenio*
 
-- [ ] Reemplazar simulación de red con URLSession real
-- [ ] Agregar Core Data para persistencia más robusta
-- [ ] Implementar Combine para reactive programming
-- [ ] Agregar tests unitarios para ViewModels
-- [ ] Implementar pull-to-refresh en la lista de tareas
-- [ ] Agregar animaciones en las transiciones
-- [ ] Soporte para modo oscuro personalizado
-
----
-
-## 🎓 Recursos Adicionales
-
-- [Apple Documentation - Protocols](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html)
-- [Apple Documentation - ScenePhase](https://developer.apple.com/documentation/swiftui/scenephase)
-- [WWDC - Managing App Life Cycle](https://developer.apple.com/videos/play/wwdc2020/10037/)
-
----
-
-## 👨‍💻 Autor
-
-**JESUS GARZA**  
-Fecha: 21/10/25
-
----
-
-## 📄 Licencia
-
-Este proyecto es material educativo para el Tema 10 de Swift.
+Si encuentras algún error o tienes sugerencias, no dudes en comentarlo en clase.

@@ -2,175 +2,116 @@
 //  ContentView.swift
 //  Tema10Swift
 //
-//  Demostración de protocolos, delegación y gestión de tareas
+//  Demostración de protocolos, delegación y comparación
 //
 
 import SwiftUI
 import Combine
 
 // MARK: - ContentViewModel
-/// ViewModel que gestiona las tareas y actúa como delegado del DataManager
-/// Demuestra: ObservableObject, Combine, patrón de delegación
+/// ViewModel simple que demuestra delegación
+/// Concepto: Un objeto (DataManager) notifica eventos a otro (ViewModel) a través de un protocolo
 class ContentViewModel: ObservableObject, DataManagerDelegate {
     
-    // MARK: - Published Properties
     @Published var tasks: [Task] = []
-    @Published var newTaskTitle: String = ""
-    @Published var newTaskPriority: Int = 1
     @Published var receivedData: [String] = []
-    @Published var errorMessage: String?
     @Published var isLoading: Bool = false
-    @Published var showAlert: Bool = false
     @Published var alertMessage: String = ""
+    @Published var showAlert: Bool = false
     
-    // MARK: - Private Properties
     private let dataManager = DataManager()
     
-    // MARK: - Initialization
     init() {
+        // El ViewModel se registra como delegado del DataManager
         dataManager.delegate = self
-        print("🎯 ContentViewModel inicializado como delegado")
+        loadSampleTasks()
     }
     
-    // MARK: - Task Management
-    
-    func addTask() {
-        guard !newTaskTitle.isEmpty else { return }
-        
-        let task = Task(
-            title: newTaskTitle,
-            priority: newTaskPriority,
-            completed: false
-        )
-        tasks.append(task)
-        
-        newTaskTitle = ""
-        newTaskPriority = 1
-        
-        print("✅ Tarea agregada: \(task)")
+    // MARK: - Sample Data
+    func loadSampleTasks() {
+        tasks = [
+            Task(title: "Estudiar Protocolos", priority: 5, completed: false),
+            Task(title: "Practicar Delegación", priority: 4, completed: false),
+            Task(title: "Revisar Equatable", priority: 3, completed: true),
+            Task(title: "Implementar Comparable", priority: 2, completed: false)
+        ]
     }
     
-    func toggleTask(at index: Int) {
-        guard tasks.indices.contains(index) else { return }
-        tasks[index].completed.toggle()
-    }
+    // MARK: - DataManagerDelegate Methods
     
-    func deleteTasks(at offsets: IndexSet) {
-        tasks.remove(atOffsets: offsets)
-    }
-    
-    var sortedTasks: [Task] {
-        tasks.sorted { $0.priority > $1.priority }
-    }
-    
-    func containsTask(withTitle title: String) -> Bool {
-        let searchTask = Task(title: title, priority: 0, completed: false)
-        return tasks.contains { $0.title == searchTask.title }
-    }
-    
-    // MARK: - Remote Data
-    
-    func fetchRemoteData() {
-        isLoading = true
-        errorMessage = nil
-        dataManager.fetchData()
-    }
-    
-    // MARK: - DataManagerDelegate
-    
+    // Cuando el DataManager recibe datos, notifica al delegado (este ViewModel)
     func dataManager(_ manager: DataManager, didReceiveData data: [String]) {
         DispatchQueue.main.async {
             self.receivedData = data
             self.isLoading = false
-            self.errorMessage = nil
-            self.alertMessage = "✅ Se recibieron \(data.count) elementos del servidor"
+            self.alertMessage = "✅ Se recibieron \(data.count) elementos"
             self.showAlert = true
-            print("✅ Delegado recibió \(data.count) elementos")
+            print("✅ Delegado recibió datos: \(data)")
         }
     }
     
     func dataManager(_ manager: DataManager, didFailWithError error: Error) {
         DispatchQueue.main.async {
-            self.errorMessage = error.localizedDescription
             self.isLoading = false
             self.alertMessage = "❌ Error: \(error.localizedDescription)"
             self.showAlert = true
-            print("❌ Delegado recibió error: \(error.localizedDescription)")
+            print("❌ Delegado recibió error: \(error)")
         }
+    }
+    
+    // MARK: - Actions
+    func fetchRemoteData() {
+        isLoading = true
+        receivedData = []
+        dataManager.fetchData()
     }
 }
 
 // MARK: - ContentView
 struct ContentView: View {
     
-    @EnvironmentObject var dataStore: DataStore
     @StateObject private var viewModel = ContentViewModel()
     
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("📚 Ejemplos de Protocolos")) {
-                    NavigationLink("🔄 Delegación Demo", destination: DelegationExampleView())
-                    NavigationLink("🧩 Extensiones de Protocolos", destination: ProtocolExtensionsExampleView())
-                    NavigationLink("⏱️ Timer & ScenePhase", destination: TimerView())
-                }
-                
-                Section(header: Text("✅ Gestión de Tareas")) {
-                    HStack {
-                        TextField("Título de tarea", text: $viewModel.newTaskTitle)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                        
-                        Stepper("\(viewModel.newTaskPriority)", value: $viewModel.newTaskPriority, in: 1...5)
-                            .frame(width: 80)
-                        
-                        Button(action: {
-                            viewModel.addTask()
-                        }) {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.green)
-                                .imageScale(.large)
-                        }
-                        .disabled(viewModel.newTaskTitle.isEmpty)
-                    }
+                // MARK: - Equatable & Comparable Demo
+                Section(header: Text("⚖️ Equatable & Comparable")) {
+                    Text("Las tareas se ordenan automáticamente por prioridad (mayor a menor)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     
-                    ForEach(Array(viewModel.sortedTasks.enumerated()), id: \.element.id) { index, task in
+                    // Uso de sorted() - posible gracias a Comparable
+                    ForEach(viewModel.tasks.sorted(by: >)) { task in
                         HStack {
-                            Button(action: {
-                                if let originalIndex = viewModel.tasks.firstIndex(where: { $0.id == task.id }) {
-                                    viewModel.toggleTask(at: originalIndex)
-                                }
-                            }) {
-                                Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(task.completed ? .green : .gray)
-                            }
+                            Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(task.completed ? .green : .gray)
                             
                             VStack(alignment: .leading) {
                                 Text(task.title)
                                     .strikethrough(task.completed)
                                 
+                                // CustomStringConvertible en acción
                                 Text(task.description)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
                     }
-                    .onDelete { offsets in
-                        let tasksToDelete = offsets.map { viewModel.sortedTasks[$0] }
-                        let originalIndices = IndexSet(tasksToDelete.compactMap { task in
-                            viewModel.tasks.firstIndex(where: { $0.id == task.id })
-                        })
-                        viewModel.deleteTasks(at: originalIndices)
-                    }
                 }
                 
-                Section(header: Text("📡 Delegación - DataManager")) {
+                // MARK: - Protocol & Delegation Demo
+                Section(header: Text("🔄 Delegación")) {
+                    Text("El DataManager notifica eventos al ViewModel a través del protocolo DataManagerDelegate")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
                     Button(action: {
                         viewModel.fetchRemoteData()
                     }) {
                         HStack {
                             if viewModel.isLoading {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
                             }
                             Text(viewModel.isLoading ? "Cargando..." : "Obtener Datos Remotos")
                         }
@@ -180,7 +121,7 @@ struct ContentView: View {
                     if !viewModel.receivedData.isEmpty {
                         ForEach(viewModel.receivedData, id: \.self) { item in
                             HStack {
-                                Image(systemName: "checkmark.circle.fill")
+                                Image(systemName: "checkmark.circle")
                                     .foregroundColor(.green)
                                 Text(item)
                             }
@@ -188,18 +129,24 @@ struct ContentView: View {
                     }
                 }
                 
-                Section(header: Text("ℹ️ Conceptos Demostrados")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Protocols (Vehicle, DataManagerDelegate)", systemImage: "text.book.closed")
-                        Label("Equatable & Comparable (Task sorting)", systemImage: "arrow.up.arrow.down")
-                        Label("CustomStringConvertible (Task.description)", systemImage: "text.quote")
-                        Label("Protocol Extensions (Identifiable)", systemImage: "puzzlepiece.extension")
-                        Label("Delegation (DataManager → ViewModel)", systemImage: "arrow.triangle.branch")
-                        Label("ScenePhase (App lifecycle monitoring)", systemImage: "clock.arrow.circlepath")
-                        Label("ObservableObject & @Published (MVVM)", systemImage: "arrow.clockwise")
-                    }
-                    .font(.caption)
+                // MARK: - Protocol Example
+                Section(header: Text("🚗 Protocolo Vehicle")) {
+                    Text("Ejemplo de un protocolo con propiedades y métodos")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    VehicleExampleView()
                 }
+                
+                // MARK: - Concepts Summary
+                Section(header: Text("📚 Conceptos Demostrados")) {
+                    Label("Protocols: Contratos que definen funcionalidad", systemImage: "doc.text")
+                    Label("Equatable: Comparar objetos con ==", systemImage: "equal")
+                    Label("Comparable: Ordenar con <, >, sorted()", systemImage: "arrow.up.arrow.down")
+                    Label("CustomStringConvertible: Descripción personalizada", systemImage: "text.quote")
+                    Label("Delegación: Comunicación entre objetos", systemImage: "arrow.triangle.branch")
+                }
+                .font(.caption)
             }
             .navigationTitle("Tema 10: Protocolos")
             .alert(viewModel.alertMessage, isPresented: $viewModel.showAlert) {
@@ -209,7 +156,28 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Vehicle Example View
+/// Vista simple que demuestra el uso del protocolo Vehicle
+struct VehicleExampleView: View {
+    
+    @State private var car = Car(numberOfWheels: 4, color: "Rojo", brand: "Toyota")
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("🚗 \(car.brand)")
+                .font(.headline)
+            Text("Ruedas: \(car.numberOfWheels)")
+            Text("Color: \(car.color)")
+            
+            Button("Cambiar a Azul") {
+                car.changeColor(to: "Azul")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 #Preview {
     ContentView()
-        .environmentObject(DataStore())
 }
