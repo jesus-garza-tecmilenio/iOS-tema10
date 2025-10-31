@@ -8,6 +8,20 @@
 import SwiftUI
 import Combine
 
+// MARK: - LifecycleEvent Model
+/// Modelo para representar eventos del ciclo de vida
+struct LifecycleEvent: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let phase: String
+    let icon: String
+    let color: Color
+    
+    var formattedTime: String {
+        timestamp.formatted(date: .omitted, time: .standard)
+    }
+}
+
 // MARK: - ContentViewModel
 /// ViewModel simple que demuestra delegación
 /// Concepto: Un objeto (DataManager) notifica eventos a otro (ViewModel) a través de un protocolo
@@ -19,12 +33,70 @@ class ContentViewModel: ObservableObject, DataManagerDelegate {
     @Published var alertMessage: String = ""
     @Published var showAlert: Bool = false
     
+    // MARK: - ScenePhase Tracking
+    @Published var currentPhase: String = "Desconocido"
+    @Published var lifecycleEvents: [LifecycleEvent] = []
+    
     private let dataManager = DataManager()
     
     init() {
         // El ViewModel se registra como delegado del DataManager
         dataManager.delegate = self
         loadSampleTasks()
+    }
+    
+    // MARK: - ScenePhase Methods
+    /// Registra un cambio de fase en el ciclo de vida
+    func logPhaseChange(phase: ScenePhase) {
+        let event: LifecycleEvent
+        
+        switch phase {
+        case .active:
+            currentPhase = "Activa"
+            event = LifecycleEvent(
+                timestamp: Date(),
+                phase: "Active",
+                icon: "play.circle.fill",
+                color: .green
+            )
+            print("📱 App activa - Usuario interactuando")
+            
+        case .inactive:
+            currentPhase = "Inactiva"
+            event = LifecycleEvent(
+                timestamp: Date(),
+                phase: "Inactive",
+                icon: "pause.circle.fill",
+                color: .orange
+            )
+            print("📱 App inactiva - En transición")
+            
+        case .background:
+            currentPhase = "En Background"
+            event = LifecycleEvent(
+                timestamp: Date(),
+                phase: "Background",
+                icon: "moon.circle.fill",
+                color: .red
+            )
+            print("📱 App en background - No visible")
+            
+        @unknown default:
+            currentPhase = "Desconocido"
+            event = LifecycleEvent(
+                timestamp: Date(),
+                phase: "Unknown",
+                icon: "questionmark.circle.fill",
+                color: .gray
+            )
+        }
+        
+        lifecycleEvents.insert(event, at: 0)
+        
+        // Mantener solo los últimos 20 eventos
+        if lifecycleEvents.count > 20 {
+            lifecycleEvents.removeLast()
+        }
     }
     
     // MARK: - Sample Data
@@ -72,9 +144,52 @@ struct ContentView: View {
     
     @StateObject private var viewModel = ContentViewModel()
     
+    // MARK: - ScenePhase Environment
+    /// Monitorea el estado actual de la escena
+    @Environment(\.scenePhase) private var scenePhase
+    
     var body: some View {
         NavigationView {
             List {
+                // MARK: - ScenePhase Demo
+                Section(header: Text("📱 Ciclo de Vida (ScenePhase)")) {
+                    HStack {
+                        Text("Estado Actual:")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text(viewModel.currentPhase)
+                            .foregroundColor(phaseColor)
+                            .fontWeight(.bold)
+                    }
+                    
+                    Text("ScenePhase monitorea el estado de la app: activa, inactiva o en background. Sal de la app y vuelve para ver los cambios.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
+                    
+                    // Registro de eventos
+                    if !viewModel.lifecycleEvents.isEmpty {
+                        DisclosureGroup("Registro de Eventos (\(viewModel.lifecycleEvents.count))") {
+                            ForEach(viewModel.lifecycleEvents.prefix(10)) { event in
+                                HStack {
+                                    Image(systemName: event.icon)
+                                        .foregroundColor(event.color)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(event.phase)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                        Text(event.formattedTime)
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 2)
+                            }
+                        }
+                    }
+                }
+                
                 // MARK: - Equatable & Comparable Demo
                 Section(header: Text("⚖️ Equatable & Comparable")) {
                     Text("Las tareas se ordenan automáticamente por prioridad (mayor a menor)")
@@ -140,6 +255,7 @@ struct ContentView: View {
                 
                 // MARK: - Concepts Summary
                 Section(header: Text("📚 Conceptos Demostrados")) {
+                    Label("ScenePhase: Ciclo de vida de la app", systemImage: "iphone")
                     Label("Protocols: Contratos que definen funcionalidad", systemImage: "doc.text")
                     Label("Equatable: Comparar objetos con ==", systemImage: "equal")
                     Label("Comparable: Ordenar con <, >, sorted()", systemImage: "arrow.up.arrow.down")
@@ -152,6 +268,25 @@ struct ContentView: View {
             .alert(viewModel.alertMessage, isPresented: $viewModel.showAlert) {
                 Button("OK", role: .cancel) { }
             }
+            // MARK: - Monitor ScenePhase Changes
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                viewModel.logPhaseChange(phase: newPhase)
+            }
+        }
+    }
+    
+    // MARK: - Phase Color
+    /// Color dinámico según el estado actual de ScenePhase
+    private var phaseColor: Color {
+        switch scenePhase {
+        case .active:
+            return .green
+        case .inactive:
+            return .orange
+        case .background:
+            return .red
+        @unknown default:
+            return .gray
         }
     }
 }
